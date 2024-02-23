@@ -25,7 +25,7 @@
     if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
         let calibrationData = [];
-        let calibrationDuration = 5000; // Calibration duration in milliseconds (5 seconds)
+        let calibrationDuration = 2000; // Calibration duration in milliseconds (5 seconds)
         let calibrationCompleted = false;
         let errorX = 0;
         let errorY = 0;
@@ -53,6 +53,7 @@
                 errorX = avgX;
                 errorY = avgY;
 
+                // Display the calibration results
                 document.getElementById("output").innerHTML = `
                     <div id="calibrationResults">
                         <p>Calibration complete.</p>
