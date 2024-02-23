@@ -34,7 +34,7 @@
         });
 
         setTimeout(() => {
-            if (calibrationData.length > 0) {
+            if (calibrationData.length > 0.01) {
                 let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
                 let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
                 let avgX = sumX / calibrationData.length;
