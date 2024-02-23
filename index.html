@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sensor Data with Threshold</title>
+<title>Sensor Data</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,60 +15,48 @@
 </style>
 </head>
 <body>
-<h1>Sensor Data with Threshold</h1>
+<h1>Sensor Data</h1>
 <div id="output">
-    <p>Accelerometer (m/s²):</p>
+    <h2>Accelerometer Data</h2>
     <p id="accelerationX">X: </p>
     <p id="accelerationY">Y: </p>
     <p id="accelerationZ">Z: </p>
-    <p>Gyroscope (rad/s):</p>
+    <h2>Gyroscope Data</h2>
     <p id="gyroscopeX">X: </p>
     <p id="gyroscopeY">Y: </p>
     <p id="gyroscopeZ">Z: </p>
-    <p>Magnetometer (μT):</p>
+    <h2>Magnetometer Data</h2>
     <p id="magnetometerX">X: </p>
     <p id="magnetometerY">Y: </p>
     <p id="magnetometerZ">Z: </p>
 </div>
 
 <script>
-    var accelerationThreshold = 0.1; // Threshold for accelerometer noise
-    var gyroscopeThreshold = 0.1; // Threshold for gyroscope noise
-    var magnetometerThreshold = 0.1; // Threshold for magnetometer noise
+    var acl = new Accelerometer({ frequency: 60 });
+    var gyroscope = new Gyroscope({ frequency: 60 });
+    var magSensor = new Magnetometer({ frequency: 60 });
 
-    window.addEventListener("devicemotion", handleMotion, true);
-    window.addEventListener("deviceorientation", handleOrientation, true);
+    acl.addEventListener("reading", function() {
+        document.getElementById("accelerationX").textContent = "X: " + acl.x.toFixed(2);
+        document.getElementById("accelerationY").textContent = "Y: " + acl.y.toFixed(2);
+        document.getElementById("accelerationZ").textContent = "Z: " + acl.z.toFixed(2);
+    });
 
-    function handleMotion(event) {
-        var acceleration = event.acceleration;
-        if (Math.abs(acceleration.x) >= accelerationThreshold ||
-            Math.abs(acceleration.y) >= accelerationThreshold ||
-            Math.abs(acceleration.z) >= accelerationThreshold) {
-            document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
-            document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
-            document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
-        }
-    }
+    gyroscope.addEventListener("reading", function() {
+        document.getElementById("gyroscopeX").textContent = "X: " + gyroscope.x.toFixed(2);
+        document.getElementById("gyroscopeY").textContent = "Y: " + gyroscope.y.toFixed(2);
+        document.getElementById("gyroscopeZ").textContent = "Z: " + gyroscope.z.toFixed(2);
+    });
 
-    function handleOrientation(event) {
-        var rotationRate = event.rotationRate;
-        if (Math.abs(rotationRate.alpha) >= gyroscopeThreshold ||
-            Math.abs(rotationRate.beta) >= gyroscopeThreshold ||
-            Math.abs(rotationRate.gamma) >= gyroscopeThreshold) {
-            document.getElementById("gyroscopeX").textContent = "X: " + rotationRate.alpha.toFixed(2);
-            document.getElementById("gyroscopeY").textContent = "Y: " + rotationRate.beta.toFixed(2);
-            document.getElementById("gyroscopeZ").textContent = "Z: " + rotationRate.gamma.toFixed(2);
-        }
+    magSensor.addEventListener("reading", function() {
+        document.getElementById("magnetometerX").textContent = "X: " + magSensor.x.toFixed(2);
+        document.getElementById("magnetometerY").textContent = "Y: " + magSensor.y.toFixed(2);
+        document.getElementById("magnetometerZ").textContent = "Z: " + magSensor.z.toFixed(2);
+    });
 
-        var magnetometer = event.absolute ? event.absolute : event;
-        if (Math.abs(magnetometer.alpha) >= magnetometerThreshold ||
-            Math.abs(magnetometer.beta) >= magnetometerThreshold ||
-            Math.abs(magnetometer.gamma) >= magnetometerThreshold) {
-            document.getElementById("magnetometerX").textContent = "X: " + magnetometer.alpha.toFixed(2);
-            document.getElementById("magnetometerY").textContent = "Y: " + magnetometer.beta.toFixed(2);
-            document.getElementById("magnetometerZ").textContent = "Z: " + magnetometer.gamma.toFixed(2);
-        }
-    }
+    acl.start();
+    gyroscope.start();
+    magSensor.start();
 </script>
 </body>
 </html>
