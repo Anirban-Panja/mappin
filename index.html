@@ -31,44 +31,46 @@
     var lastTimestamp = null;
     var velocity = { x: 0, y: 0, z: 0 };
     var displacement = { x: 0, y: 0, z: 0 };
-    var threshold = 1; // Adjust threshold as needed
+    var accelerationThreshold = 1; // Threshold for considering person has stopped
+    var minAccelerationThreshold = 1; // Threshold for considering device not to be at rest
 
     window.addEventListener("devicemotion", handleMotion, true);
 
     function handleMotion(event) {
         var acceleration = event.acceleration;
+        var accelerationMagnitude = Math.sqrt(acceleration.x ** 2 + acceleration.y ** 2 + acceleration.z ** 2);
         var currentTimestamp = Date.now();
-        
-        // Check if the absolute value of acceleration is below the threshold
-        if (Math.abs(acceleration.x) < threshold) {
-            acceleration.x = 0;
-        }
-        if (Math.abs(acceleration.y) < threshold) {
-            acceleration.y = 0;
-        }
-        if (Math.abs(acceleration.z) < threshold) {
-            acceleration.z = 0;
-        }
 
         document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
         document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
         document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
 
-        if (lastTimestamp) {
-            var timeDifference = (currentTimestamp - lastTimestamp) / 1000; // Convert to seconds
-            velocity.x += acceleration.x * timeDifference;
-            velocity.y += acceleration.y * timeDifference;
-            velocity.z += acceleration.z * timeDifference;
+        if (Math.abs(acceleration.x) >= minAccelerationThreshold || 
+            Math.abs(acceleration.y) >= minAccelerationThreshold || 
+            Math.abs(acceleration.z) >= minAccelerationThreshold) {
+            
+            if (accelerationMagnitude >= accelerationThreshold) {
+                if (lastTimestamp) {
+                    var timeDifference = (currentTimestamp - lastTimestamp) / 1000; // Convert to seconds
+                    velocity.x += acceleration.x * timeDifference;
+                    velocity.y += acceleration.y * timeDifference;
+                    velocity.z += acceleration.z * timeDifference;
 
-            displacement.x += velocity.x * timeDifference;
-            displacement.y += velocity.y * timeDifference;
-            displacement.z += velocity.z * timeDifference;
+                    displacement.x += velocity.x * timeDifference;
+                    displacement.y += velocity.y * timeDifference;
+                    displacement.z += velocity.z * timeDifference;
 
-            document.getElementById("distanceX").textContent = "X: " + displacement.x.toFixed(2);
-            document.getElementById("distanceY").textContent = "Y: " + displacement.y.toFixed(2);
-            document.getElementById("distanceZ").textContent = "Z: " + displacement.z.toFixed(2);
+                    document.getElementById("distanceX").textContent = "X: " + displacement.x.toFixed(2);
+                    document.getElementById("distanceY").textContent = "Y: " + displacement.y.toFixed(2);
+                    document.getElementById("distanceZ").textContent = "Z: " + displacement.z.toFixed(2);
+                }
+                lastTimestamp = currentTimestamp;
+            } else {
+                lastTimestamp = null; // Reset lastTimestamp if person has stopped
+            }
+        } else {
+            lastTimestamp = null; // Reset lastTimestamp if device is not at rest
         }
-        lastTimestamp = currentTimestamp;
     }
 </script>
 </body>
