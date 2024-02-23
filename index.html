@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Motion and Rotation Demo</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    #output {
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+<h1>Device Motion and Rotation Demo</h1>
+<div id="output">
+    <p>Acceleration (m/s²):</p>
+    <p id="accelerationX">X: </p>
+    <p id="accelerationY">Y: </p>
+    <p id="accelerationZ">Z: </p>
+    <p>Rotation (degrees):</p>
+    <p id="rotationAlpha">Alpha: </p>
+    <p id="rotationBeta">Beta: </p>
+    <p id="rotationGamma">Gamma: </p>
+</div>
+
+<script>
+    window.addEventListener("devicemotion", handleMotion, true);
+    window.addEventListener("deviceorientation", handleOrientation, true);
+
+    function handleMotion(event) {
+        var acceleration = event.accelerationIncludingGravity;
+        document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
+        document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
+        document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
+    }
+
+    function handleOrientation(event) {
+        var rotation = event.alpha != null ? event : event.accelerationIncludingGravity;
+        document.getElementById("rotationAlpha").textContent = "Alpha: " + rotation.alpha.toFixed(2);
+        document.getElementById("rotationBeta").textContent = "Beta: " + rotation.beta.toFixed(2);
+        document.getElementById("rotationGamma").textContent = "Gamma: " + rotation.gamma.toFixed(2);
+    }
+</script>
+</body>
+</html>
