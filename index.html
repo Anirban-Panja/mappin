@@ -21,38 +21,51 @@
     <p id="accelerationX">X: </p>
     <p id="accelerationY">Y: </p>
     <p id="accelerationZ">Z: </p>
+    <h2>Gyroscope Data</h2>
+    <p id="gyroscopeX">X: </p>
+    <p id="gyroscopeY">Y: </p>
+    <p id="gyroscopeZ">Z: </p>
+    <h2>Magnetometer Data</h2>
+    <p id="magnetometerX">X: </p>
+    <p id="magnetometerY">Y: </p>
+    <p id="magnetometerZ">Z: </p>
 </div>
 
 <script>
-    // Check if the browser supports the Permissions API
-    if ('permissions' in navigator) {
-        // Request permission for accelerometer
-        navigator.permissions.query({ name: 'accelerometer' })
+    function requestSensorPermission(sensorName, startSensorData) {
+        navigator.permissions.query({ name: sensorName })
             .then((permissionStatus) => {
                 if (permissionStatus.state === 'granted') {
-                    console.log('Accelerometer permission granted.');
+                    console.log(`${sensorName} permission granted.`);
                     startSensorData();
                 } else {
-                    console.log('Requesting accelerometer permission...');
-                    navigator.permissions.request({ name: 'accelerometer' })
+                    console.log(`Requesting ${sensorName} permission...`);
+                    navigator.permissions.request({ name: sensorName })
                         .then((newPermissionStatus) => {
                             if (newPermissionStatus.state === 'granted') {
-                                console.log('Accelerometer permission granted.');
+                                console.log(`${sensorName} permission granted.`);
                                 startSensorData();
                             } else {
-                                console.log('Accelerometer permission denied.');
+                                console.log(`${sensorName} permission denied.`);
                             }
                         });
                 }
             })
             .catch((error) => {
-                console.error('Error occurred while querying accelerometer permission:', error);
+                console.error(`Error occurred while querying ${sensorName} permission:`, error);
             });
+    }
+
+    // Check if the browser supports the Permissions API
+    if ('permissions' in navigator) {
+        requestSensorPermission('accelerometer', startAccelerometerData);
+        requestSensorPermission('gyroscope', startGyroscopeData);
+        requestSensorPermission('magnetometer', startMagnetometerData);
     } else {
         console.error('Permissions API not supported.');
     }
 
-    function startSensorData() {
+    function startAccelerometerData() {
         var acl = new Accelerometer({ frequency: 60 });
 
         acl.addEventListener("reading", function() {
@@ -62,6 +75,30 @@
         });
 
         acl.start();
+    }
+
+    function startGyroscopeData() {
+        var gyroscope = new Gyroscope({ frequency: 60 });
+
+        gyroscope.addEventListener("reading", function() {
+            document.getElementById("gyroscopeX").textContent = "X: " + gyroscope.x.toFixed(2);
+            document.getElementById("gyroscopeY").textContent = "Y: " + gyroscope.y.toFixed(2);
+            document.getElementById("gyroscopeZ").textContent = "Z: " + gyroscope.z.toFixed(2);
+        });
+
+        gyroscope.start();
+    }
+
+    function startMagnetometerData() {
+        var magSensor = new Magnetometer({ frequency: 60 });
+
+        magSensor.addEventListener("reading", function() {
+            document.getElementById("magnetometerX").textContent = "X: " + magSensor.x.toFixed(2);
+            document.getElementById("magnetometerY").textContent = "Y: " + magSensor.y.toFixed(2);
+            document.getElementById("magnetometerZ").textContent = "Z: " + magSensor.z.toFixed(2);
+        });
+
+        magSensor.start();
     }
 </script>
 </body>
