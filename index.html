@@ -32,9 +32,9 @@
 </div>
 
 <script>
-    var acl = new Accelerometer({ frequency: 60 });
-    var gyroscope = new Gyroscope({ frequency: 60 });
-    var magSensor = new Magnetometer({ frequency: 60 });
+    var acl = new Accelerometer({ frequency: 10 });
+    var gyroscope = new Gyroscope({ frequency: 10 });
+    var magSensor = new Magnetometer({ frequency: 10 });
 
     acl.addEventListener("reading", function() {
         document.getElementById("accelerationX").textContent = "X: " + acl.x.toFixed(2);
