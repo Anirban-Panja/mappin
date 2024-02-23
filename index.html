@@ -53,16 +53,6 @@
                 errorX = avgX;
                 errorY = avgY;
 
-                // Display the calibration results
-                document.getElementById("output").innerHTML = `
-                    <div id="calibrationResults">
-                        <p>Calibration complete.</p>
-                        <p>Error in X-axis: ${errorX.toFixed(2)}</p>
-                        <p>Error in Y-axis: ${errorY.toFixed(2)}</p>
-                        <p>You can now use the sensor.</p>
-                    </div>
-                `;
-
                 calibrationCompleted = true;
             } else {
                 document.getElementById("output").innerHTML += `<p>No data collected for calibration.</p>`;
@@ -70,6 +60,17 @@
         }, calibrationDuration);
 
         acl.start();
+
+        setInterval(() => {
+            if (calibrationCompleted) {
+                // Display live sensor data without error
+                let liveX = acl.x - errorX;
+                let liveY = acl.y - errorY;
+
+                document.getElementById("accelerationX").textContent = liveX.toFixed(2);
+                document.getElementById("accelerationY").textContent = liveY.toFixed(2);
+            }
+        }, 100); // Update display every 100 milliseconds
     } else {
         console.error('Accelerometer not supported.');
     }
