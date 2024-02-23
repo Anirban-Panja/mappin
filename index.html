@@ -27,12 +27,25 @@
     var lastTimestamp = null;
     var velocity = { x: 0, y: 0, z: 0 };
     var displacement = { x: 0, y: 0, z: 0 };
+    var threshold = 0.1; // Adjust threshold as needed
 
     window.addEventListener("devicemotion", handleMotion, true);
 
     function handleMotion(event) {
         var acceleration = event.acceleration;
         var currentTimestamp = Date.now();
+        
+        // Check if the absolute value of acceleration is below the threshold
+        if (Math.abs(acceleration.x) < threshold) {
+            acceleration.x = 0;
+        }
+        if (Math.abs(acceleration.y) < threshold) {
+            acceleration.y = 0;
+        }
+        if (Math.abs(acceleration.z) < threshold) {
+            acceleration.z = 0;
+        }
+
         if (lastTimestamp) {
             var timeDifference = (currentTimestamp - lastTimestamp) / 1000; // Convert to seconds
             velocity.x += acceleration.x * timeDifference;
