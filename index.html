@@ -17,6 +17,10 @@
 <body>
 <h1>Device Motion and Rotation Demo</h1>
 <div id="output">
+    <p>Acceleration (m/s²):</p>
+    <p id="accelerationX">X: </p>
+    <p id="accelerationY">Y: </p>
+    <p id="accelerationZ">Z: </p>
     <p>Distance Traveled (m):</p>
     <p id="distanceX">X: </p>
     <p id="distanceY">Y: </p>
@@ -27,7 +31,7 @@
     var lastTimestamp = null;
     var velocity = { x: 0, y: 0, z: 0 };
     var displacement = { x: 0, y: 0, z: 0 };
-    var threshold = 1.0; // Adjust threshold as needed
+    var threshold = 0.1; // Adjust threshold as needed
 
     window.addEventListener("devicemotion", handleMotion, true);
 
@@ -45,6 +49,10 @@
         if (Math.abs(acceleration.z) < threshold) {
             acceleration.z = 0;
         }
+
+        document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
+        document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
+        document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
 
         if (lastTimestamp) {
             var timeDifference = (currentTimestamp - lastTimestamp) / 1000; // Convert to seconds
