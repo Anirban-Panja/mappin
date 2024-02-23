@@ -17,33 +17,37 @@
 <body>
 <h1>Device Motion and Rotation Demo</h1>
 <div id="output">
-    <p>Acceleration (m/s²):</p>
-    <p id="accelerationX">X: </p>
-    <p id="accelerationY">Y: </p>
-    <p id="accelerationZ">Z: </p>
+    <p>Distance Traveled (m):</p>
+    <p id="distanceX">X: </p>
+    <p id="distanceY">Y: </p>
+    <p id="distanceZ">Z: </p>
 </div>
 
 <script>
+    var lastTimestamp = null;
+    var velocity = { x: 0, y: 0, z: 0 };
+    var displacement = { x: 0, y: 0, z: 0 };
+
     window.addEventListener("devicemotion", handleMotion, true);
 
     function handleMotion(event) {
-        var acceleration = event.acceleration || event.accelerationIncludingGravity;
-        var threshold = 0.1; // Adjust threshold as needed
+        var acceleration = event.acceleration;
+        var currentTimestamp = Date.now();
+        if (lastTimestamp) {
+            var timeDifference = (currentTimestamp - lastTimestamp) / 1000; // Convert to seconds
+            velocity.x += acceleration.x * timeDifference;
+            velocity.y += acceleration.y * timeDifference;
+            velocity.z += acceleration.z * timeDifference;
 
-        // Check if the absolute value of acceleration is below the threshold
-        if (Math.abs(acceleration.x) < threshold) {
-            acceleration.x = 0;
-        }
-        if (Math.abs(acceleration.y) < threshold) {
-            acceleration.y = 0;
-        }
-        if (Math.abs(acceleration.z) < threshold) {
-            acceleration.z = 0;
-        }
+            displacement.x += velocity.x * timeDifference;
+            displacement.y += velocity.y * timeDifference;
+            displacement.z += velocity.z * timeDifference;
 
-        document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
-        document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
-        document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
+            document.getElementById("distanceX").textContent = "X: " + displacement.x.toFixed(2);
+            document.getElementById("distanceY").textContent = "Y: " + displacement.y.toFixed(2);
+            document.getElementById("distanceZ").textContent = "Z: " + displacement.z.toFixed(2);
+        }
+        lastTimestamp = currentTimestamp;
     }
 </script>
 </body>
