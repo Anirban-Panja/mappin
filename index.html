@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Device Motion and Rotation Demo</title>
+<title>Sensor Data with Threshold</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,61 +15,58 @@
 </style>
 </head>
 <body>
-<h1>Device Motion and Rotation Demo</h1>
+<h1>Sensor Data with Threshold</h1>
 <div id="output">
-    <p>Acceleration (m/s²):</p>
+    <p>Accelerometer (m/s²):</p>
     <p id="accelerationX">X: </p>
     <p id="accelerationY">Y: </p>
     <p id="accelerationZ">Z: </p>
-    <p>Distance Traveled (m):</p>
-    <p id="distanceX">X: </p>
-    <p id="distanceY">Y: </p>
-    <p id="distanceZ">Z: </p>
+    <p>Gyroscope (rad/s):</p>
+    <p id="gyroscopeX">X: </p>
+    <p id="gyroscopeY">Y: </p>
+    <p id="gyroscopeZ">Z: </p>
+    <p>Magnetometer (μT):</p>
+    <p id="magnetometerX">X: </p>
+    <p id="magnetometerY">Y: </p>
+    <p id="magnetometerZ">Z: </p>
 </div>
 
 <script>
-    var lastTimestamp = null;
-    var velocity = { x: 0, y: 0, z: 0 };
-    var displacement = { x: 0, y: 0, z: 0 };
-    var accelerationThreshold = 1; // Threshold for considering person has stopped
-    var minAccelerationThreshold = .5; // Threshold for considering device not to be at rest
+    var accelerationThreshold = 0.1; // Threshold for accelerometer noise
+    var gyroscopeThreshold = 0.1; // Threshold for gyroscope noise
+    var magnetometerThreshold = 0.1; // Threshold for magnetometer noise
 
     window.addEventListener("devicemotion", handleMotion, true);
+    window.addEventListener("deviceorientation", handleOrientation, true);
 
     function handleMotion(event) {
         var acceleration = event.acceleration;
-        var accelerationMagnitude = Math.sqrt(acceleration.x ** 2 + acceleration.y ** 2 + acceleration.z ** 2);
-        var currentTimestamp = Date.now();
+        if (Math.abs(acceleration.x) >= accelerationThreshold ||
+            Math.abs(acceleration.y) >= accelerationThreshold ||
+            Math.abs(acceleration.z) >= accelerationThreshold) {
+            document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
+            document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
+            document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
+        }
+    }
 
-        document.getElementById("accelerationX").textContent = "X: " + acceleration.x.toFixed(2);
-        document.getElementById("accelerationY").textContent = "Y: " + acceleration.y.toFixed(2);
-        document.getElementById("accelerationZ").textContent = "Z: " + acceleration.z.toFixed(2);
+    function handleOrientation(event) {
+        var rotationRate = event.rotationRate;
+        if (Math.abs(rotationRate.alpha) >= gyroscopeThreshold ||
+            Math.abs(rotationRate.beta) >= gyroscopeThreshold ||
+            Math.abs(rotationRate.gamma) >= gyroscopeThreshold) {
+            document.getElementById("gyroscopeX").textContent = "X: " + rotationRate.alpha.toFixed(2);
+            document.getElementById("gyroscopeY").textContent = "Y: " + rotationRate.beta.toFixed(2);
+            document.getElementById("gyroscopeZ").textContent = "Z: " + rotationRate.gamma.toFixed(2);
+        }
 
-        if (Math.abs(acceleration.x) >= minAccelerationThreshold || 
-            Math.abs(acceleration.y) >= minAccelerationThreshold || 
-            Math.abs(acceleration.z) >= minAccelerationThreshold) {
-            
-            if (accelerationMagnitude >= accelerationThreshold) {
-                if (lastTimestamp) {
-                    var timeDifference = (currentTimestamp - lastTimestamp) / 1000; // Convert to seconds
-                    velocity.x += acceleration.x * timeDifference;
-                    velocity.y += acceleration.y * timeDifference;
-                    velocity.z += acceleration.z * timeDifference;
-
-                    displacement.x += velocity.x * timeDifference;
-                    displacement.y += velocity.y * timeDifference;
-                    displacement.z += velocity.z * timeDifference;
-
-                    document.getElementById("distanceX").textContent = "X: " + displacement.x.toFixed(2);
-                    document.getElementById("distanceY").textContent = "Y: " + displacement.y.toFixed(2);
-                    document.getElementById("distanceZ").textContent = "Z: " + displacement.z.toFixed(2);
-                }
-                lastTimestamp = currentTimestamp;
-            } else {
-                lastTimestamp = null; // Reset lastTimestamp if person has stopped
-            }
-        } else {
-            lastTimestamp = null; // Reset lastTimestamp if device is not at rest
+        var magnetometer = event.absolute ? event.absolute : event;
+        if (Math.abs(magnetometer.alpha) >= magnetometerThreshold ||
+            Math.abs(magnetometer.beta) >= magnetometerThreshold ||
+            Math.abs(magnetometer.gamma) >= magnetometerThreshold) {
+            document.getElementById("magnetometerX").textContent = "X: " + magnetometer.alpha.toFixed(2);
+            document.getElementById("magnetometerY").textContent = "Y: " + magnetometer.beta.toFixed(2);
+            document.getElementById("magnetometerZ").textContent = "Z: " + magnetometer.gamma.toFixed(2);
         }
     }
 </script>
