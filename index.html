@@ -19,53 +19,79 @@
 <div id="output">
     <p id="accelerationXDisplay">Acceleration along the X-axis: <span id="accelerationX">0</span></p>
     <p id="accelerationYDisplay">Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
+    <p id="calibrationTimer">Calibration time remaining: <span id="calibrationTime">10</span> seconds</p>
+    <button id="calibrationButton">Calibrate</button>
 </div>
 
 <script>
     if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
         let calibrationData = [];
-        let calibrationDuration = 5000; // Calibration duration in milliseconds (5 seconds)
+        let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
         let calibrationCompleted = false;
-        let deviationX = 0;
-        let deviationY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // Function to start calibration
+        function startCalibration() {
+            calibrationData = [];
+            calibrationCompleted = false;
+            offsetX = 0;
+            offsetY = 0;
+            let calibrationTimeRemaining = calibrationDuration / 1000;
+            let calibrationTimerInterval = setInterval(() => {
+                calibrationTimeRemaining--;
+                document.getElementById("calibrationTime").textContent = calibrationTimeRemaining;
+                if (calibrationTimeRemaining <= 0) {
+                    clearInterval(calibrationTimerInterval);
+                }
+            }, 1000);
+
+            // Start calibration phase
+            setTimeout(() => {
+                if (calibrationData.length > 0) {
+                    // Calculate offset as the average of calibration data
+                    let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
+                    let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
+                    offsetX = sumX / calibrationData.length;
+                    offsetY = sumY / calibrationData.length;
+
+                    calibrationCompleted = true;
+
+                    // Display calibration results
+                    console.log('Calibration complete.');
+                    console.log('Offset X:', offsetX);
+                    console.log('Offset Y:', offsetY);
+                } else {
+                    console.error('No data collected for calibration.');
+                }
+            }, calibrationDuration);
+        }
+
+        // Event listener for calibration button click
+        document.getElementById("calibrationButton").addEventListener("click", startCalibration);
 
         acl.addEventListener("reading", function() {
             if (!calibrationCompleted) {
                 calibrationData.push({ x: acl.x, y: acl.y });
             } else {
-                // Calibrate the accelerometer data
-                let calibratedX = acl.x - deviationX;
-                let calibratedY = acl.y - deviationY;
+                // Apply calibration by subtracting offset
+                let calibratedX = acl.x - offsetX;
+                let calibratedY = acl.y - offsetY;
 
+                // Display calibrated values
                 document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
                 document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
             }
         });
 
-        setTimeout(() => {
-            if (calibrationData.length > 0) {
-                let minX = Math.min(...calibrationData.map(data => data.x));
-                let maxX = Math.max(...calibrationData.map(data => data.x));
-                let minY = Math.min(...calibrationData.map(data => data.y));
-                let maxY = Math.max(...calibrationData.map(data => data.y));
-
-                deviationX = (maxX + minX) / 2; // Calculate deviation from zero for X-axis
-                deviationY = (maxY + minY) / 2; // Calculate deviation from zero for Y-axis
-
-                calibrationCompleted = true;
-            } else {
-                document.getElementById("output").innerHTML += `<p>No data collected for calibration.</p>`;
-            }
-        }, calibrationDuration);
-
         acl.start();
 
+        // Display live sensor data with zero deviation after calibration
         setInterval(() => {
             if (calibrationCompleted) {
-                // Display live sensor data with zero deviation
-                let liveX = acl.x - deviationX;
-                let liveY = acl.y - deviationY;
+                let liveX = acl.x - offsetX;
+                let liveY = acl.y - offsetY;
 
                 document.getElementById("accelerationX").textContent = liveX.toFixed(2);
                 document.getElementById("accelerationY").textContent = liveY.toFixed(2);
