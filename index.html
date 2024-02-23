@@ -32,7 +32,7 @@
     var velocity = { x: 0, y: 0, z: 0 };
     var displacement = { x: 0, y: 0, z: 0 };
     var accelerationThreshold = 1; // Threshold for considering person has stopped
-    var minAccelerationThreshold = 1; // Threshold for considering device not to be at rest
+    var minAccelerationThreshold = .5; // Threshold for considering device not to be at rest
 
     window.addEventListener("devicemotion", handleMotion, true);
 
