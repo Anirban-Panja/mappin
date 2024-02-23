@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sensor Data</title>
+<title>Accelerometer Data</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,90 +15,24 @@
 </style>
 </head>
 <body>
-<h1>Sensor Data</h1>
+<h1>Accelerometer Data</h1>
 <div id="output">
-    <h2>Accelerometer Data</h2>
-    <p id="accelerationX">X: </p>
-    <p id="accelerationY">Y: </p>
-    <p id="accelerationZ">Z: </p>
-    <h2>Gyroscope Data</h2>
-    <p id="gyroscopeX">X: </p>
-    <p id="gyroscopeY">Y: </p>
-    <p id="gyroscopeZ">Z: </p>
-    <h2>Magnetometer Data</h2>
-    <p id="magnetometerX">X: </p>
-    <p id="magnetometerY">Y: </p>
-    <p id="magnetometerZ">Z: </p>
+    <p>Acceleration along the X-axis: <span id="accelerationX">0</span></p>
+    <p>Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
 </div>
 
 <script>
-    function requestSensorPermission(sensorName, startSensorData) {
-        navigator.permissions.query({ name: sensorName })
-            .then((permissionStatus) => {
-                if (permissionStatus.state === 'granted') {
-                    console.log(`${sensorName} permission granted.`);
-                    startSensorData();
-                } else {
-                    console.log(`Requesting ${sensorName} permission...`);
-                    navigator.permissions.request({ name: sensorName })
-                        .then((newPermissionStatus) => {
-                            if (newPermissionStatus.state === 'granted') {
-                                console.log(`${sensorName} permission granted.`);
-                                startSensorData();
-                            } else {
-                                console.log(`${sensorName} permission denied.`);
-                            }
-                        });
-                }
-            })
-            .catch((error) => {
-                console.error(`Error occurred while querying ${sensorName} permission:`, error);
-            });
-    }
-
-    // Check if the browser supports the Permissions API
-    if ('permissions' in navigator) {
-        requestSensorPermission('accelerometer', startAccelerometerData);
-        requestSensorPermission('gyroscope', startGyroscopeData);
-        requestSensorPermission('magnetometer', startMagnetometerData);
-    } else {
-        console.error('Permissions API not supported.');
-    }
-
-    function startAccelerometerData() {
-        var acl = new Accelerometer({ frequency: 60 });
+    if ('Accelerometer' in window) {
+        const acl = new Accelerometer({ frequency: 60 });
 
         acl.addEventListener("reading", function() {
-            document.getElementById("accelerationX").textContent = "X: " + acl.x.toFixed(2);
-            document.getElementById("accelerationY").textContent = "Y: " + acl.y.toFixed(2);
-            document.getElementById("accelerationZ").textContent = "Z: " + acl.z.toFixed(2);
+            document.getElementById("accelerationX").textContent = acl.x.toFixed(2);
+            document.getElementById("accelerationY").textContent = acl.y.toFixed(2);
         });
 
         acl.start();
-    }
-
-    function startGyroscopeData() {
-        var gyroscope = new Gyroscope({ frequency: 60 });
-
-        gyroscope.addEventListener("reading", function() {
-            document.getElementById("gyroscopeX").textContent = "X: " + gyroscope.x.toFixed(2);
-            document.getElementById("gyroscopeY").textContent = "Y: " + gyroscope.y.toFixed(2);
-            document.getElementById("gyroscopeZ").textContent = "Z: " + gyroscope.z.toFixed(2);
-        });
-
-        gyroscope.start();
-    }
-
-    function startMagnetometerData() {
-        var magSensor = new Magnetometer({ frequency: 60 });
-
-        magSensor.addEventListener("reading", function() {
-            document.getElementById("magnetometerX").textContent = "X: " + magSensor.x.toFixed(2);
-            document.getElementById("magnetometerY").textContent = "Y: " + magSensor.y.toFixed(2);
-            document.getElementById("magnetometerZ").textContent = "Z: " + magSensor.z.toFixed(2);
-        });
-
-        magSensor.start();
+    } else {
+        console.error('Accelerometer not supported.');
     }
 </script>
 </body>
