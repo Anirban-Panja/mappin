@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accelerometer Data</title>
+<title>Accelerometer Calibration</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,22 +15,51 @@
 </style>
 </head>
 <body>
-<h1>Accelerometer Data</h1>
+<h1>Accelerometer Calibration</h1>
+<div id="instructions">
+    <p>Please hold the phone flat on your palm or keep the phone on a flat surface in a stationary position for calibration.</p>
+</div>
 <div id="output">
-    <p>Acceleration along the X-axis: <span id="accelerationX">0</span></p>
-    <p>Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
+    <p>Calibrating...</p>
 </div>
 
 <script>
     if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
+        let calibrationData = [];
+        let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
 
         acl.addEventListener("reading", function() {
-            document.getElementById("accelerationX").textContent = acl.x.toFixed(2);
-            document.getElementById("accelerationY").textContent = acl.y.toFixed(2);
+            calibrationData.push({ x: acl.x, y: acl.y });
         });
 
-        acl.start();
+        setTimeout(() => {
+            if (calibrationData.length > 0) {
+                let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
+                let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
+                let avgX = sumX / calibrationData.length;
+                let avgY = sumY / calibrationData.length;
+
+                // Calculate error margin
+                let errorMarginX = Math.max(...calibrationData.map(data => Math.abs(data.x - avgX)));
+                let errorMarginY = Math.max(...calibrationData.map(data => Math.abs(data.y - avgY)));
+
+                document.getElementById("output").innerHTML = `
+                    <p>Calibration complete.</p>
+                    <p>Average X-axis value: ${avgX.toFixed(2)}</p>
+                    <p>Average Y-axis value: ${avgY.toFixed(2)}</p>
+                    <p>Error margin X-axis: ${errorMarginX.toFixed(2)}</p>
+                    <p>Error margin Y-axis: ${errorMarginY.toFixed(2)}</p>
+                    <p>You can now use the sensor.</p>
+                `;
+
+                // Now, you can use avgX and avgY as the calibration values
+                // You can start listening to sensor readings and adjust them based on these calibration values
+                acl.start();
+            } else {
+                document.getElementById("output").innerHTML = `<p>No data collected for calibration.</p>`;
+            }
+        }, calibrationDuration);
     } else {
         console.error('Accelerometer not supported.');
     }
