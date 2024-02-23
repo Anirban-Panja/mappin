@@ -27,7 +27,7 @@
     window.addEventListener("devicemotion", handleMotion, true);
 
     function handleMotion(event) {
-        var acceleration = event.accelerationIncludingGravity;
+        var acceleration = event.acceleration || event.accelerationIncludingGravity;
         var threshold = 0.1; // Adjust threshold as needed
 
         // Check if the absolute value of acceleration is below the threshold
