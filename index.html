@@ -25,18 +25,18 @@
     if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
         let calibrationData = [];
-        let calibrationDuration = 1000; // Calibration duration in milliseconds (5 seconds)
+        let calibrationDuration = 5000; // Calibration duration in milliseconds (5 seconds)
         let calibrationCompleted = false;
-        let avgX = 0;
-        let avgY = 0;
+        let errorX = 0;
+        let errorY = 0;
 
         acl.addEventListener("reading", function() {
             if (!calibrationCompleted) {
                 calibrationData.push({ x: acl.x, y: acl.y });
             } else {
                 // Calibrate the accelerometer data
-                let calibratedX = acl.x - avgX;
-                let calibratedY = acl.y - avgY;
+                let calibratedX = acl.x - errorX;
+                let calibratedY = acl.y - errorY;
 
                 document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
                 document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
@@ -47,14 +47,17 @@
             if (calibrationData.length > 0) {
                 let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
                 let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
-                avgX = sumX / calibrationData.length;
-                avgY = sumY / calibrationData.length;
+                let avgX = sumX / calibrationData.length;
+                let avgY = sumY / calibrationData.length;
+
+                errorX = avgX;
+                errorY = avgY;
 
                 document.getElementById("output").innerHTML = `
                     <div id="calibrationResults">
                         <p>Calibration complete.</p>
-                        <p>Average X-axis value: ${avgX.toFixed(2)}</p>
-                        <p>Average Y-axis value: ${avgY.toFixed(2)}</p>
+                        <p>Error in X-axis: ${errorX.toFixed(2)}</p>
+                        <p>Error in Y-axis: ${errorY.toFixed(2)}</p>
                         <p>You can now use the sensor.</p>
                     </div>
                 `;
