@@ -25,18 +25,18 @@
     if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
         let calibrationData = [];
-        let calibrationDuration = 2000; // Calibration duration in milliseconds (5 seconds)
+        let calibrationDuration = 5000; // Calibration duration in milliseconds (5 seconds)
         let calibrationCompleted = false;
-        let errorX = 0;
-        let errorY = 0;
+        let deviationX = 0;
+        let deviationY = 0;
 
         acl.addEventListener("reading", function() {
             if (!calibrationCompleted) {
                 calibrationData.push({ x: acl.x, y: acl.y });
             } else {
                 // Calibrate the accelerometer data
-                let calibratedX = acl.x - errorX;
-                let calibratedY = acl.y - errorY;
+                let calibratedX = acl.x - deviationX;
+                let calibratedY = acl.y - deviationY;
 
                 document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
                 document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
@@ -45,13 +45,13 @@
 
         setTimeout(() => {
             if (calibrationData.length > 0) {
-                let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
-                let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
-                let avgX = sumX / calibrationData.length;
-                let avgY = sumY / calibrationData.length;
+                let minX = Math.min(...calibrationData.map(data => data.x));
+                let maxX = Math.max(...calibrationData.map(data => data.x));
+                let minY = Math.min(...calibrationData.map(data => data.y));
+                let maxY = Math.max(...calibrationData.map(data => data.y));
 
-                errorX = avgX;
-                errorY = avgY;
+                deviationX = (maxX + minX) / 2; // Calculate deviation from zero for X-axis
+                deviationY = (maxY + minY) / 2; // Calculate deviation from zero for Y-axis
 
                 calibrationCompleted = true;
             } else {
@@ -63,9 +63,9 @@
 
         setInterval(() => {
             if (calibrationCompleted) {
-                // Display live sensor data without error
-                let liveX = acl.x - errorX;
-                let liveY = acl.y - errorY;
+                // Display live sensor data with zero deviation
+                let liveX = acl.x - deviationX;
+                let liveY = acl.y - deviationY;
 
                 document.getElementById("accelerationX").textContent = liveX.toFixed(2);
                 document.getElementById("accelerationY").textContent = liveY.toFixed(2);
