@@ -28,33 +28,32 @@
         const acl = new Accelerometer({ frequency: 60 });
         let calibrationData = [];
         let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
+        let calibrationCompleted = false;
 
         acl.addEventListener("reading", function() {
-            calibrationData.push({ x: acl.x, y: acl.y });
+            if (!calibrationCompleted) {
+                calibrationData.push({ x: acl.x, y: acl.y });
+            } else {
+                document.getElementById("accelerationX").textContent = acl.x.toFixed(2);
+                document.getElementById("accelerationY").textContent = acl.y.toFixed(2);
+            }
         });
 
         setTimeout(() => {
-            if (calibrationData.length > 0.01) {
+            if (calibrationData.length > 0) {
                 let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
                 let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
                 let avgX = sumX / calibrationData.length;
                 let avgY = sumY / calibrationData.length;
 
-                // Calculate error margin
-                let errorMarginX = Math.max(...calibrationData.map(data => Math.abs(data.x - avgX)));
-                let errorMarginY = Math.max(...calibrationData.map(data => Math.abs(data.y - avgY)));
-
                 document.getElementById("output").innerHTML = `
                     <p>Calibration complete.</p>
                     <p>Average X-axis value: ${avgX.toFixed(2)}</p>
                     <p>Average Y-axis value: ${avgY.toFixed(2)}</p>
-                    <p>Error margin X-axis: ${errorMarginX.toFixed(2)}</p>
-                    <p>Error margin Y-axis: ${errorMarginY.toFixed(2)}</p>
                     <p>You can now use the sensor.</p>
                 `;
 
-                // Now, you can use avgX and avgY as the calibration values
-                // You can start listening to sensor readings and adjust them based on these calibration values
+                calibrationCompleted = true;
                 acl.start();
             } else {
                 document.getElementById("output").innerHTML = `<p>No data collected for calibration.</p>`;
