@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accelerometer and Gyroscope Calibration and Data</title>
+<title>Accelerometer Calibration and Data</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,20 +15,17 @@
 </style>
 </head>
 <body>
-<h1>Accelerometer and Gyroscope Calibration and Data</h1>
+<h1>Accelerometer Calibration and Data</h1>
 <div id="output">
-    <h2>Accelerometer Data</h2>
     <p id="accelerationXDisplay">Acceleration along the X-axis: <span id="accelerationX">0</span></p>
     <p id="accelerationYDisplay">Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
-    <h2>Gyroscope Data</h2>
-    <p id="gyroscopeXDisplay">Angular velocity along the X-axis: <span id="gyroscopeX">0</span></p>
-    <p id="gyroscopeYDisplay">Angular velocity along the Y-axis: <span id="gyroscopeY">0</span></p>
+    <p id="calibrationTimer">Calibration time remaining: <span id="calibrationTime">10</span> seconds</p>
+    <button id="calibrationButton">Calibrate</button>
 </div>
 
 <script>
-    if ('Accelerometer' in window && 'Gyroscope' in window) {
+    if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
-        const gyroscope = new Gyroscope({ frequency: 60 });
         let calibrationData = [];
         let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
         let calibrationCompleted = false;
@@ -82,22 +79,26 @@
                 let calibratedX = acl.x - offsetX;
                 let calibratedY = acl.y - offsetY;
 
-                // Display calibrated accelerometer values
+                // Display calibrated values
                 document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
                 document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
             }
         });
 
-        gyroscope.addEventListener("reading", function() {
-            // Display gyroscope values
-            document.getElementById("gyroscopeX").textContent = gyroscope.x.toFixed(2);
-            document.getElementById("gyroscopeY").textContent = gyroscope.y.toFixed(2);
-        });
-
         acl.start();
-        gyroscope.start();
+
+        // Display live sensor data with zero deviation after calibration
+        setInterval(() => {
+            if (calibrationCompleted) {
+                let liveX = acl.x - offsetX;
+                let liveY = acl.y - offsetY;
+
+                document.getElementById("accelerationX").textContent = liveX.toFixed(2);
+                document.getElementById("accelerationY").textContent = liveY.toFixed(2);
+            }
+        }, 100); // Update display every 100 milliseconds
     } else {
-        console.error('Accelerometer or Gyroscope not supported.');
+        console.error('Accelerometer not supported.');
     }
 </script>
 </body>
