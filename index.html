@@ -42,7 +42,7 @@
 
         const magnitude = Math.sqrt(calibratedX ** 2 + calibratedY ** 2 + acceleration.z ** 2);
 
-        if (isStepCounting && magnitude > 13.4) { // Adjust this threshold as per your requirement
+        if (isStepCounting && magnitude > 13.2) { // Adjust this threshold as per your requirement
             stepCounter++;
             document.getElementById('stepCount').textContent = stepCounter;
         }
