@@ -3,142 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accelerometer Calibration, Data, and Distance Measurement</title>
+<title>Step Counter</title>
 <style>
     body {
         font-family: Arial, sans-serif;
         text-align: center;
     }
-    #output {
+    #stepCount {
+        font-size: 24px;
         margin-top: 20px;
     }
 </style>
 </head>
 <body>
-<h1>Accelerometer Calibration, Data, and Distance Measurement</h1>
-<div id="output">
-    <p id="accelerationXDisplay">Filtered Acceleration along the X-axis: <span id="accelerationX">0</span></p>
-    <!-- <p id="accelerationYDisplay">Filtered Acceleration along the Y-axis: <span id="accelerationY">0</span></p> -->
-    <p id="accelerationZDisplay">Filtered Acceleration along the Z-axis: <span id="accelerationZ">0</span></p>
-    <p id="distanceXDisplay">Distance Travelled along the X-axis: <span id="distanceX">0</span> meters</p>
-    <!-- <p id="distanceYDisplay">Distance Travelled along the Y-axis: <span id="distanceY">0</span> meters</p> -->
-    <p id="distanceZDisplay">Distance Travelled along the Z-axis: <span id="distanceZ">0</span> meters</p>
-    <p id="calibrationTimer">Calibration time remaining: <span id="calibrationTime">10</span> seconds</p>
-    <button id="calibrationButton">Calibrate</button>
-</div>
+
+<h1>Step Counter</h1>
+<p>Steps taken: <span id="stepCount">0</span></p>
 
 <script>
-    if ('Accelerometer' in window) {
-        const acl = new Accelerometer({ frequency: 60 });
-        let calibrationDataX = [];
-        // let calibrationDataY = [];
-        let calibrationDataZ = [];
-        let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
-        let calibrationCompleted = false;
-        let offsetX = 0;
-        // let offsetY = 0;
-        let offsetZ = 0;
-        let lastReadingTimestamp = 0;
-        let distanceX = 0;
-        // let distanceY = 0;
-        let distanceZ = 0;
-        let threshold = 0.1; // Threshold value to reduce noise and bias
+    let stepCounter = 0;
+    let isStepCounting = false;
+    let calibrationData = [];
+    let calibrationCompleted = false;
+    let offsetX = 0;
+    let offsetY = 0;
 
-        // Function to start calibration
-        function startCalibration() {
-            calibrationDataX = [];
-            // calibrationDataY = [];
-            calibrationDataZ = [];
-            distanceX = 0; // Reset distance to zero
-            // distanceY = 0;
-            distanceZ = 0;
-            calibrationCompleted = false;
-            offsetX = 0;
-            // offsetY = 0;
-            offsetZ = 0;
-            let calibrationTimeRemaining = calibrationDuration / 1000;
-            let calibrationTimerInterval = setInterval(() => {
-                calibrationTimeRemaining--;
-                document.getElementById("calibrationTime").textContent = calibrationTimeRemaining;
-                if (calibrationTimeRemaining <= 0) {
-                    clearInterval(calibrationTimerInterval);
-                }
-            }, 1000);
+    window.addEventListener('devicemotion', handleMotion);
 
-            // Start calibration phase
-            setTimeout(() => {
-                if (calibrationDataX.length > 0 && calibrationDataZ.length > 0) {
-                    // Calculate offset as the average of calibration data
-                    let sumX = calibrationDataX.reduce((acc, curr) => acc + curr, 0);
-                    // let sumY = calibrationDataY.reduce((acc, curr) => acc + curr, 0);
-                    let sumZ = calibrationDataZ.reduce((acc, curr) => acc + curr, 0);
-                    offsetX = sumX / calibrationDataX.length;
-                    // offsetY = sumY / calibrationDataY.length;
-                    offsetZ = sumZ / calibrationDataZ.length;
+    function handleMotion(event) {
+        const acceleration = event.accelerationIncludingGravity;
+        let calibratedX = acceleration.x;
+        let calibratedY = acceleration.y;
 
-                    calibrationCompleted = true;
-
-                    // Display calibration results
-                    console.log('Calibration complete.');
-                    console.log('Offset X:', offsetX);
-                    // console.log('Offset Y:', offsetY);
-                    console.log('Offset Z:', offsetZ);
-                } else {
-                    console.error('No data collected for calibration.');
-                }
-            }, calibrationDuration);
+        if (calibrationCompleted) {
+            calibratedX -= offsetX;
+            calibratedY -= offsetY;
         }
 
-        // Event listener for calibration button click
-        document.getElementById("calibrationButton").addEventListener("click", startCalibration);
+        const magnitude = Math.sqrt(calibratedX ** 2 + calibratedY ** 2 + acceleration.z ** 2);
 
-        acl.addEventListener("reading", function() {
-            if (!calibrationCompleted) {
-                calibrationDataX.push(acl.x);
-                // calibrationDataY.push(acl.y);
-                calibrationDataZ.push(acl.z);
+        if (isStepCounting && magnitude > 15) { // Adjust this threshold as per your requirement
+            stepCounter++;
+            document.getElementById('stepCount').textContent = stepCounter;
+        }
+    }
+
+    function startCalibration() {
+        calibrationData = [];
+        calibrationCompleted = false;
+        offsetX = 0;
+        offsetY = 0;
+        setTimeout(() => {
+            if (calibrationData.length > 0) {
+                offsetX = calibrationData.reduce((acc, curr) => acc + curr.x, 0) / calibrationData.length;
+                offsetY = calibrationData.reduce((acc, curr) => acc + curr.y, 0) / calibrationData.length;
+                calibrationCompleted = true;
+                console.log('Calibration complete.');
+                console.log('Offset X:', offsetX);
+                console.log('Offset Y:', offsetY);
             } else {
-                // Apply calibration by subtracting offset
-                let calibratedX = acl.x - offsetX;
-                // let calibratedY = acl.y - offsetY;
-                let calibratedZ = acl.z - offsetZ;
-
-                // Apply threshold to reduce noise and bias
-                calibratedX = Math.abs(calibratedX) < threshold ? 0 : calibratedX;
-                // calibratedY = Math.abs(calibratedY) < threshold ? 0 : calibratedY;
-                calibratedZ = Math.abs(calibratedZ) < threshold ? 0 : calibratedZ;
-
-                // Calculate time difference since last reading
-                let currentTime = performance.now();
-                let deltaTime = (currentTime - lastReadingTimestamp) / 1000; // Convert milliseconds to seconds
-
-                // Calculate velocity using acceleration and time difference
-                let velocityX = calibratedX * deltaTime; // Velocity in X-axis
-                // let velocityY = calibratedY * deltaTime; // Velocity in Y-axis
-                let velocityZ = calibratedZ * deltaTime; // Velocity in Z-axis
-
-                // Calculate distance travelled using velocity and time difference (assuming constant velocity over short time interval)
-                distanceX += velocityX * deltaTime; // Displacement in X-axis
-                // distanceY += velocityY * deltaTime; // Displacement in Y-axis
-                distanceZ += velocityZ * deltaTime; // Displacement in Z-axis
-
-                // Update last reading timestamp
-                lastReadingTimestamp = currentTime;
-
-                // Display filtered values and distance travelled
-                document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
-                // document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
-                document.getElementById("accelerationZ").textContent = calibratedZ.toFixed(2);
-                document.getElementById("distanceX").textContent = distanceX.toFixed(2);
-                // document.getElementById("distanceY").textContent = distanceY.toFixed(2);
-                document.getElementById("distanceZ").textContent = distanceZ.toFixed(2);
+                console.error('No data collected for calibration.');
             }
-        });
+        }, 5000); // 5 seconds calibration time
+    }
 
-        acl.start();
-    } else {
-        console.error('Accelerometer not supported.');
+    function startStepCounting() {
+        stepCounter = 0;
+        isStepCounting = true;
+        document.getElementById('stepCount').textContent = stepCounter;
+    }
+
+    function stopStepCounting() {
+        isStepCounting = false;
     }
 </script>
+
+<button onclick="startCalibration()">Calibrate</button>
+<button onclick="startStepCounting()">Start Counting Steps</button>
+<button onclick="stopStepCounting()">Stop Counting Steps</button>
+
 </body>
 </html>
