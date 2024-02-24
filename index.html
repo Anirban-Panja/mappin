@@ -18,10 +18,10 @@
 <h1>Accelerometer Calibration, Data, and Distance Measurement</h1>
 <div id="output">
     <p id="accelerationXDisplay">Filtered Acceleration along the X-axis: <span id="accelerationX">0</span></p>
-    <p id="accelerationYDisplay">Filtered Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
+    <!-- <p id="accelerationYDisplay">Filtered Acceleration along the Y-axis: <span id="accelerationY">0</span></p> -->
     <p id="accelerationZDisplay">Filtered Acceleration along the Z-axis: <span id="accelerationZ">0</span></p>
     <p id="distanceXDisplay">Distance Travelled along the X-axis: <span id="distanceX">0</span> meters</p>
-    <p id="distanceYDisplay">Distance Travelled along the Y-axis: <span id="distanceY">0</span> meters</p>
+    <!-- <p id="distanceYDisplay">Distance Travelled along the Y-axis: <span id="distanceY">0</span> meters</p> -->
     <p id="distanceZDisplay">Distance Travelled along the Z-axis: <span id="distanceZ">0</span> meters</p>
     <p id="calibrationTimer">Calibration time remaining: <span id="calibrationTime">10</span> seconds</p>
     <button id="calibrationButton">Calibrate</button>
@@ -31,40 +31,31 @@
     if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
         let calibrationDataX = [];
-        let calibrationDataY = [];
+        // let calibrationDataY = [];
         let calibrationDataZ = [];
         let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
         let calibrationCompleted = false;
         let offsetX = 0;
-        let offsetY = 0;
+        // let offsetY = 0;
         let offsetZ = 0;
         let lastReadingTimestamp = 0;
         let distanceX = 0;
-        let distanceY = 0;
+        // let distanceY = 0;
         let distanceZ = 0;
         let threshold = 0.1; // Threshold value to reduce noise and bias
-
-        // Kalman filter parameters
-        let Q = 0.01; // Process noise covariance
-        let R = 0.1; // Measurement noise covariance
-        let P = 1; // Estimation error covariance
-        let x = 0; // Initial estimate for X-axis
-        let y = 0; // Initial estimate for Y-axis
-        let z = 0; // Initial estimate for Z-axis
-        let K = 0; // Kalman gain
 
         // Function to start calibration
         function startCalibration() {
             calibrationDataX = [];
-            calibrationDataY = [];
+            // calibrationDataY = [];
             calibrationDataZ = [];
+            distanceX = 0; // Reset distance to zero
+            // distanceY = 0;
+            distanceZ = 0;
             calibrationCompleted = false;
             offsetX = 0;
-            offsetY = 0;
+            // offsetY = 0;
             offsetZ = 0;
-            distanceX = 0; // Initialize distance to zero
-            distanceY = 0;
-            distanceZ = 0;
             let calibrationTimeRemaining = calibrationDuration / 1000;
             let calibrationTimerInterval = setInterval(() => {
                 calibrationTimeRemaining--;
@@ -76,13 +67,13 @@
 
             // Start calibration phase
             setTimeout(() => {
-                if (calibrationDataX.length > 0 && calibrationDataY.length > 0 && calibrationDataZ.length > 0) {
+                if (calibrationDataX.length > 0 && calibrationDataZ.length > 0) {
                     // Calculate offset as the average of calibration data
                     let sumX = calibrationDataX.reduce((acc, curr) => acc + curr, 0);
-                    let sumY = calibrationDataY.reduce((acc, curr) => acc + curr, 0);
+                    // let sumY = calibrationDataY.reduce((acc, curr) => acc + curr, 0);
                     let sumZ = calibrationDataZ.reduce((acc, curr) => acc + curr, 0);
                     offsetX = sumX / calibrationDataX.length;
-                    offsetY = sumY / calibrationDataY.length;
+                    // offsetY = sumY / calibrationDataY.length;
                     offsetZ = sumZ / calibrationDataZ.length;
 
                     calibrationCompleted = true;
@@ -90,7 +81,7 @@
                     // Display calibration results
                     console.log('Calibration complete.');
                     console.log('Offset X:', offsetX);
-                    console.log('Offset Y:', offsetY);
+                    // console.log('Offset Y:', offsetY);
                     console.log('Offset Z:', offsetZ);
                 } else {
                     console.error('No data collected for calibration.');
@@ -104,55 +95,42 @@
         acl.addEventListener("reading", function() {
             if (!calibrationCompleted) {
                 calibrationDataX.push(acl.x);
-                calibrationDataY.push(acl.y);
+                // calibrationDataY.push(acl.y);
                 calibrationDataZ.push(acl.z);
             } else {
                 // Apply calibration by subtracting offset
                 let calibratedX = acl.x - offsetX;
-                let calibratedY = acl.y - offsetY;
+                // let calibratedY = acl.y - offsetY;
                 let calibratedZ = acl.z - offsetZ;
 
-                // Apply Kalman filter for X-axis
-                let measurementX = Math.abs(calibratedX) < threshold ? 0 : calibratedX; // Apply threshold
-                K = P / (P + R);
-                x = x + K * (measurementX - x);
-                P = (1 - K) * P + Q;
-
-                // Apply Kalman filter for Y-axis
-                let measurementY = Math.abs(calibratedY) < threshold ? 0 : calibratedY; // Apply threshold
-                K = P / (P + R);
-                y = y + K * (measurementY - y);
-                P = (1 - K) * P + Q;
-
-                // Apply Kalman filter for Z-axis
-                let measurementZ = Math.abs(calibratedZ) < threshold ? 0 : calibratedZ; // Apply threshold
-                K = P / (P + R);
-                z = z + K * (measurementZ - z);
-                P = (1 - K) * P + Q;
+                // Apply threshold to reduce noise and bias
+                calibratedX = Math.abs(calibratedX) < threshold ? 0 : calibratedX;
+                // calibratedY = Math.abs(calibratedY) < threshold ? 0 : calibratedY;
+                calibratedZ = Math.abs(calibratedZ) < threshold ? 0 : calibratedZ;
 
                 // Calculate time difference since last reading
                 let currentTime = performance.now();
                 let deltaTime = (currentTime - lastReadingTimestamp) / 1000; // Convert milliseconds to seconds
 
                 // Calculate velocity using acceleration and time difference
-                let velocityX = x * deltaTime; // Velocity in X-axis
-                let velocityY = y * deltaTime; // Velocity in Y-axis
-                let velocityZ = z * deltaTime; // Velocity in Z-axis
+                let velocityX = calibratedX * deltaTime; // Velocity in X-axis
+                // let velocityY = calibratedY * deltaTime; // Velocity in Y-axis
+                let velocityZ = calibratedZ * deltaTime; // Velocity in Z-axis
 
                 // Calculate distance travelled using velocity and time difference (assuming constant velocity over short time interval)
                 distanceX += velocityX * deltaTime; // Displacement in X-axis
-                distanceY += velocityY * deltaTime; // Displacement in Y-axis
+                // distanceY += velocityY * deltaTime; // Displacement in Y-axis
                 distanceZ += velocityZ * deltaTime; // Displacement in Z-axis
 
                 // Update last reading timestamp
                 lastReadingTimestamp = currentTime;
 
                 // Display filtered values and distance travelled
-                document.getElementById("accelerationX").textContent = x.toFixed(2);
-                document.getElementById("accelerationY").textContent = y.toFixed(2);
-                document.getElementById("accelerationZ").textContent = z.toFixed(2);
+                document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
+                // document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
+                document.getElementById("accelerationZ").textContent = calibratedZ.toFixed(2);
                 document.getElementById("distanceX").textContent = distanceX.toFixed(2);
-                document.getElementById("distanceY").textContent = distanceY.toFixed(2);
+                // document.getElementById("distanceY").textContent = distanceY.toFixed(2);
                 document.getElementById("distanceZ").textContent = distanceZ.toFixed(2);
             }
         });
