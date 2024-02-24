@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accelerometer Calibration and Data with Kalman Filter</title>
+<title>Accelerometer Calibration, Data, and Distance Measurement</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,11 +15,14 @@
 </style>
 </head>
 <body>
-<h1>Accelerometer Calibration and Data with Kalman Filter</h1>
+<h1>Accelerometer Calibration, Data, and Distance Measurement</h1>
 <div id="output">
     <p id="accelerationXDisplay">Filtered Acceleration along the X-axis: <span id="accelerationX">0</span></p>
     <p id="accelerationYDisplay">Filtered Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
     <p id="accelerationZDisplay">Filtered Acceleration along the Z-axis: <span id="accelerationZ">0</span></p>
+    <p id="distanceXDisplay">Distance Travelled along the X-axis: <span id="distanceX">0</span> meters</p>
+    <p id="distanceYDisplay">Distance Travelled along the Y-axis: <span id="distanceY">0</span> meters</p>
+    <p id="distanceZDisplay">Distance Travelled along the Z-axis: <span id="distanceZ">0</span> meters</p>
     <p id="calibrationTimer">Calibration time remaining: <span id="calibrationTime">10</span> seconds</p>
     <button id="calibrationButton">Calibrate</button>
 </div>
@@ -35,6 +38,10 @@
         let offsetX = 0;
         let offsetY = 0;
         let offsetZ = 0;
+        let lastReadingTimestamp = 0;
+        let distanceX = 0;
+        let distanceY = 0;
+        let distanceZ = 0;
 
         // Kalman filter parameters
         let Q = 0.01; // Process noise covariance
@@ -119,10 +126,30 @@
                 z = z + K * (measurementZ - z);
                 P = (1 - K) * P + Q;
 
-                // Display filtered values
+                // Calculate time difference since last reading
+                let currentTime = performance.now();
+                let deltaTime = (currentTime - lastReadingTimestamp) / 1000; // Convert milliseconds to seconds
+
+                // Calculate velocity using acceleration and time difference
+                let velocityX = x * deltaTime; // Velocity in X-axis
+                let velocityY = y * deltaTime; // Velocity in Y-axis
+                let velocityZ = z * deltaTime; // Velocity in Z-axis
+
+                // Calculate distance travelled using velocity and time difference (assuming constant velocity over short time interval)
+                distanceX += velocityX * deltaTime; // Displacement in X-axis
+                distanceY += velocityY * deltaTime; // Displacement in Y-axis
+                distanceZ += velocityZ * deltaTime; // Displacement in Z-axis
+
+                // Update last reading timestamp
+                lastReadingTimestamp = currentTime;
+
+                // Display filtered values and distance travelled
                 document.getElementById("accelerationX").textContent = x.toFixed(2);
                 document.getElementById("accelerationY").textContent = y.toFixed(2);
                 document.getElementById("accelerationZ").textContent = z.toFixed(2);
+                document.getElementById("distanceX").textContent = distanceX.toFixed(2);
+                document.getElementById("distanceY").textContent = distanceY.toFixed(2);
+                document.getElementById("distanceZ").textContent = distanceZ.toFixed(2);
             }
         });
 
