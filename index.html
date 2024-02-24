@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accelerometer Calibration and Data</title>
+<title>Accelerometer Calibration and Data with Kalman Filter</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -15,30 +15,36 @@
 </style>
 </head>
 <body>
-<h1>Accelerometer Calibration and Data</h1>
+<h1>Accelerometer Calibration and Data with Kalman Filter</h1>
 <div id="output">
-    <p id="accelerationXDisplay">Acceleration along the X-axis: <span id="accelerationX">0</span></p>
-    <p id="accelerationYDisplay">Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
+    <p id="accelerationXDisplay">Filtered Acceleration along the X-axis: <span id="accelerationX">0</span></p>
+    <p id="accelerationYDisplay">Filtered Acceleration along the Y-axis: <span id="accelerationY">0</span></p>
     <p id="calibrationTimer">Calibration time remaining: <span id="calibrationTime">10</span> seconds</p>
     <button id="calibrationButton">Calibrate</button>
-    <h2>Gyroscope Data</h2>
-    <p id="gyroscopeXDisplay">Angular velocity along the X-axis: <span id="gyroscopeX">0</span></p>
-    <p id="gyroscopeYDisplay">Angular velocity along the Y-axis: <span id="gyroscopeY">0</span></p>
 </div>
 
 <script>
-    if ('Accelerometer' in window && 'Gyroscope' in window) {
+    if ('Accelerometer' in window) {
         const acl = new Accelerometer({ frequency: 60 });
-        const gyroscope = new Gyroscope({ frequency: 60 });
-        let calibrationData = [];
+        let calibrationDataX = [];
+        let calibrationDataY = [];
         let calibrationDuration = 10000; // Calibration duration in milliseconds (10 seconds)
         let calibrationCompleted = false;
         let offsetX = 0;
         let offsetY = 0;
 
+        // Kalman filter parameters
+        let Q = 0.01; // Process noise covariance
+        let R = 0.1; // Measurement noise covariance
+        let P = 1; // Estimation error covariance
+        let x = 0; // Initial estimate for X-axis
+        let y = 0; // Initial estimate for Y-axis
+        let K = 0; // Kalman gain
+
         // Function to start calibration
         function startCalibration() {
-            calibrationData = [];
+            calibrationDataX = [];
+            calibrationDataY = [];
             calibrationCompleted = false;
             offsetX = 0;
             offsetY = 0;
@@ -53,12 +59,12 @@
 
             // Start calibration phase
             setTimeout(() => {
-                if (calibrationData.length > 0) {
+                if (calibrationDataX.length > 0 && calibrationDataY.length > 0) {
                     // Calculate offset as the average of calibration data
-                    let sumX = calibrationData.reduce((acc, curr) => acc + curr.x, 0);
-                    let sumY = calibrationData.reduce((acc, curr) => acc + curr.y, 0);
-                    offsetX = sumX / calibrationData.length;
-                    offsetY = sumY / calibrationData.length;
+                    let sumX = calibrationDataX.reduce((acc, curr) => acc + curr, 0);
+                    let sumY = calibrationDataY.reduce((acc, curr) => acc + curr, 0);
+                    offsetX = sumX / calibrationDataX.length;
+                    offsetY = sumY / calibrationDataY.length;
 
                     calibrationCompleted = true;
 
@@ -77,28 +83,34 @@
 
         acl.addEventListener("reading", function() {
             if (!calibrationCompleted) {
-                calibrationData.push({ x: acl.x, y: acl.y });
+                calibrationDataX.push(acl.x);
+                calibrationDataY.push(acl.y);
             } else {
                 // Apply calibration by subtracting offset
                 let calibratedX = acl.x - offsetX;
                 let calibratedY = acl.y - offsetY;
 
-                // Display calibrated values
-                document.getElementById("accelerationX").textContent = calibratedX.toFixed(2);
-                document.getElementById("accelerationY").textContent = calibratedY.toFixed(2);
+                // Apply Kalman filter for X-axis
+                let measurementX = calibratedX;
+                K = P / (P + R);
+                x = x + K * (measurementX - x);
+                P = (1 - K) * P + Q;
+
+                // Apply Kalman filter for Y-axis
+                let measurementY = calibratedY;
+                K = P / (P + R);
+                y = y + K * (measurementY - y);
+                P = (1 - K) * P + Q;
+
+                // Display filtered values
+                document.getElementById("accelerationX").textContent = x.toFixed(2);
+                document.getElementById("accelerationY").textContent = y.toFixed(2);
             }
         });
 
-        gyroscope.addEventListener("reading", function() {
-            // Display gyroscope values
-            document.getElementById("gyroscopeX").textContent = gyroscope.x.toFixed(2);
-            document.getElementById("gyroscopeY").textContent = gyroscope.y.toFixed(2);
-        });
-
         acl.start();
-        gyroscope.start();
     } else {
-        console.error('Accelerometer or Gyroscope not supported.');
+        console.error('Accelerometer not supported.');
     }
 </script>
 </body>
